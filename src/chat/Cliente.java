@@ -46,24 +46,27 @@ class MarcoCliente extends JFrame {
     public MarcoCliente() {
         setBounds(600, 300, 280, 350);
         String nickUsuario = JOptionPane.showInputDialog("Nick: ");
-        LaminaMarcoCliente milamina = new LaminaMarcoCliente(nickUsuario);
+        String ipservidor = JOptionPane.showInputDialog("¿Cuan es la ip del servidor?");
+        LaminaMarcoCliente milamina = new LaminaMarcoCliente(nickUsuario, ipservidor);
         add(milamina);
         setVisible(true);
-        addWindowListener(new EnvioOnline(nickUsuario));
+        addWindowListener(new EnvioOnline(nickUsuario, ipservidor));
     }
 }
 
 class EnvioOnline extends WindowAdapter {
     private String nick;
+    private String ip;
 
-    EnvioOnline(String nickUsuario) {
+    EnvioOnline(String nickUsuario, String ip) {
         this.nick = nickUsuario;
+        this.ip = ip;
     }
 
     @Override
     public void windowOpened(WindowEvent e) {
         CanalEnvio online = new CanalEnvio();
-        online.enviarOnline("192.168.1.13", 9999, nick);//primer parametro es la dirección del servidor
+        online.enviarOnline(this.ip, 9999, this.nick);
     }
 }
 
@@ -74,28 +77,30 @@ class LaminaMarcoCliente extends JPanel implements Runnable {
     private JLabel nick;
     private JButton miboton;
     private JTextArea areachat;
+    private String ipServidor;
     HashMap<String, String> ipsMenu = new HashMap<String, String>();
 
-    public LaminaMarcoCliente(String nickUsuario) {
+    public LaminaMarcoCliente(String nickUsuario, String ipServidor) {
         
+        this.ipServidor = ipServidor;
         JLabel minick = new JLabel("Nick: ");
         add(minick);
-        nick = new JLabel();
-        nick.setText(nickUsuario);
-        add(nick);
+        this.nick = new JLabel();
+        this.nick.setText(nickUsuario);
+        add(this.nick);
         JLabel texto = new JLabel("Online: ");
         texto.setHorizontalAlignment(JLabel.CENTER);
         add(texto);
-        ip = new JComboBox();
-        add(ip);
-        areachat = new JTextArea(12, 20);
-        add(areachat);
-        campo1 = new JTextField(20);
-        add(campo1);
-        miboton = new JButton("Enviar");
-        EnviarTexto enviar = new EnviarTexto();
-        miboton.addActionListener(enviar);
-        add(miboton);
+        this.ip = new JComboBox();
+        add(this.ip);
+        this.areachat = new JTextArea(12, 20);
+        add(this.areachat);
+        this.campo1 = new JTextField(20);
+        add(this.campo1);
+        this.miboton = new JButton("Enviar");
+        EnviarTexto enviar = new EnviarTexto(ipServidor);
+        this.miboton.addActionListener(enviar);
+        add(this.miboton);
 
         Thread mihilo = new Thread(this);
         mihilo.start();
@@ -104,7 +109,7 @@ class LaminaMarcoCliente extends JPanel implements Runnable {
     @Override
     public void run() {
         try {
-            ServerSocket servidorcliente = new ServerSocket(9998);//cambiar puerto a 9997 o 9998
+            ServerSocket servidorcliente = new ServerSocket(9998);
             Socket socketCliente;
             Datos paqueteResibido;
 
@@ -116,11 +121,7 @@ class LaminaMarcoCliente extends JPanel implements Runnable {
                     areachat.append(paqueteResibido.getNick() + ": " + paqueteResibido.getMensaje() + "\n");
                 } else {/*---limpia y agrega los usuarios conectados---*/
                     ip.removeAllItems();
-                    //HashMap<String, String> ipsMenu = new HashMap<String, String>();
                     ipsMenu = paqueteResibido.getIps();
-                    /*for (String s : ipsMenu) {
-                        ip.addItem(s);
-                    }*/
                     for (Map.Entry<String, String> entry : ipsMenu.entrySet()) {
                         ip.addItem(entry.getKey());
                     }
@@ -132,13 +133,17 @@ class LaminaMarcoCliente extends JPanel implements Runnable {
     }
 
     private class EnviarTexto implements ActionListener {
+        private String ipServidor;
+
+        private EnviarTexto(String ipServidor) {
+            this.ipServidor = ipServidor;
+        }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             areachat.append(campo1.getText() + "\n");
             CanalEnvio online = new CanalEnvio();
-            online.enviarCarta("192.168.1.13", 9999, new Datos(nick.getText(),//primer parametro es la dirección del servidor
-                    //ip.getSelectedItem().toString(),
+            online.enviarCarta(this.ipServidor, 9999, new Datos(nick.getText(),
                     ipsMenu.get(ip.getSelectedItem().toString()),
                     campo1.getText()));
             campo1.setText("");

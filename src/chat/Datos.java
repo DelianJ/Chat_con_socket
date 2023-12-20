@@ -13,7 +13,6 @@ import java.util.HashMap;
  */
 public class Datos implements Serializable{
     private String nick, ip, mensaje;
-    //private ArrayList<String> ips;
     private HashMap<String, String> ips;
 
     public Datos(String nick, String ip, String mensaje) {

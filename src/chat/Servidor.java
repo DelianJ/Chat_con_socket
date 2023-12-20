@@ -54,7 +54,6 @@ class MarcoServidor extends JFrame implements Runnable {
             ServerSocket servidor = new ServerSocket(9999);
             String nick, ip, mensaje;
             Datos paquete_resibido;
-            //ArrayList<String> listaip = new ArrayList<String>();
             HashMap<String, String> ips = new HashMap<String, String>();
 
             while (true) {
@@ -74,9 +73,6 @@ class MarcoServidor extends JFrame implements Runnable {
                     InetAddress localizacion = misocket.getInetAddress();
                     String ipremota = localizacion.getHostAddress();
                     areatext.append("Online: " + ipremota + "\n");
-                    /*listaip.add(ipremota);
-                    paquete_resibido.setIps(listaip);
-                    listaip.forEach(t -> System.out.println(t));*/
                     ips.put(paquete_resibido.getNick(), ipremota);
                     paquete_resibido.setIps(ips);
                     for (Map.Entry<String, String> entry : ips.entrySet()) {
